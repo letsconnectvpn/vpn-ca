@@ -164,9 +164,9 @@ func sign(caInfo *caInfo, commonName string, tpl *x509.Certificate) *x509.Certif
 func main() {
 	var caDir = flag.String("ca-dir", ".", "the CA dir")
 	var caInit = flag.Bool("init", false, "initialize the CA")
-	var serverCommonName = flag.String("server", "", "generate a server certificate")
-	var clientCommonName = flag.String("client", "", "generate a client certificate")
-	var notAfter = flag.String("not-after", "", "certificate is only valid until specified moment")
+	var serverCommonName = flag.String("server", "", "generate a server certificate with provided CN")
+	var clientCommonName = flag.String("client", "", "generate a client certificate with provided CN")
+	var notAfter = flag.String("not-after", "", "certificate is only valid until specified moment, format: 2019-08-16T14:00:00+00:00")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
@@ -177,6 +177,8 @@ func main() {
 		initCa(*caDir)
 		return
 	}
+
+    // XXX make sure the CA exists
 
 	if "" == *serverCommonName && "" == *clientCommonName {
 		flag.Usage()
