@@ -178,7 +178,7 @@ func main() {
 		return
 	}
 
-    // XXX make sure the CA exists
+	// XXX make sure the CA exists
 
 	if "" == *serverCommonName && "" == *clientCommonName {
 		flag.Usage()
