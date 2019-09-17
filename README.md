@@ -31,6 +31,10 @@ resulted in a tiny CA that does exactly what we need and nothing more with a
 very simple CLI API. Implementing a PHP extension seemed like overkill, so 
 we simply use the CLI from PHP.
 
+# Platform Support
+
+We tested on Linux, OpenBSD, macOS and Windows. It works everywhere!
+
 # Build
 
 Use the `Makefile`:
