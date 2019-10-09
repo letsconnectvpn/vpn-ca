@@ -1,14 +1,5 @@
 Simple CA intended for use with Let's Connect! & eduVPN.
 
-It is based on:
-
-* [eedev/minica](https://github.com/eedev/minica)
-* [jsha/minica](https://github.com/jsha/minica)
-
-Some ideas from:
-
-* [FiloSottile/mkcert](https://github.com/FiloSottile/mkcert)
-
 # Why
 
 We started out using [easy-rsa](https://github.com/OpenVPN/easy-rsa) for Let's 
