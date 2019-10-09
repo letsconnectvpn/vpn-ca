@@ -57,11 +57,11 @@ func writePem(pemFile string, derBytes []byte, pemType string) {
 }
 
 func readKey(pemFile string) crypto.Signer {
-	derBytes := readPem(pemFile, "RSA PRIVATE KEY")
-	signer, err := x509.ParsePKCS1PrivateKey(derBytes)
+	derBytes := readPem(pemFile, "PRIVATE KEY")
+	signer, err := x509.ParsePKCS8PrivateKey(derBytes)
 	fatalIfErr(err, "unable to parse private key")
 
-	return signer
+	return signer.(crypto.Signer)
 }
 
 func readCert(pemFile string) *x509.Certificate {
@@ -82,9 +82,9 @@ func initCa(caDir string) {
 func generateKey(filename string) *rsa.PrivateKey {
 	key, err := rsa.GenerateKey(rand.Reader, 3072)
 	fatalIfErr(err, "unable to generate key")
-	der := x509.MarshalPKCS1PrivateKey(key)
+	der, err := x509.MarshalPKCS8PrivateKey(key)
 	fatalIfErr(err, "unable to convert key to DER")
-	writePem(filename, der, "RSA PRIVATE KEY")
+	writePem(filename, der, "PRIVATE KEY")
 
 	return key
 }
