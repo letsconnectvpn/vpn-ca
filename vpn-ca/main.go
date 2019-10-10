@@ -33,7 +33,8 @@ func getCa(caDir string) *caInfo {
 }
 
 func readPem(pemFile, pemType string) []byte {
-	pemData, _ := ioutil.ReadFile(pemFile)
+	pemData, err := ioutil.ReadFile(pemFile)
+	fatalIfErr(err, "unable to open PEM")
 	block, _ := pem.Decode(pemData)
 	if block == nil {
 		log.Fatalf("unable to decode PEM")
@@ -179,8 +180,6 @@ func main() {
 		initCa(*caDir)
 		return
 	}
-
-	// XXX make sure the CA exists
 
 	if "" == *serverCommonName && "" == *clientCommonName {
 		flag.Usage()
