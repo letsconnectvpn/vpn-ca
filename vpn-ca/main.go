@@ -201,9 +201,11 @@ func main() {
 		var notAfterTime time.Time
 		notAfterTime = time.Now().AddDate(0, 0, 90)
 		if "" != *notAfter {
-			// XXX make sure the time is actually in the future!
 			p, err := time.Parse(time.RFC3339, *notAfter)
 			fatalIfErr(err, "unable to parse --not-after")
+			if !p.After(time.Now()) {
+				log.Fatalf("--not-after must be in the future")
+			}
 			notAfterTime = p
 		}
 
