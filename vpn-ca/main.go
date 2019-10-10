@@ -119,7 +119,6 @@ func getClientTemplate(commonName string, notAfter *time.Time) *x509.Certificate
 }
 
 func getServerTemplate(commonName string, notAfter *time.Time) *x509.Certificate {
-	// 1 year
 	return getTemplate(commonName, *notAfter, x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment, []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth})
 }
 
