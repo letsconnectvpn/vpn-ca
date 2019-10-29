@@ -188,26 +188,35 @@ func main() {
 
 	caInfo := getCa(*caDir)
 
+	// determine whether the user specified an "-not-after" flag and parse it
+	// if they did...
+	var notAfterTime time.Time
+	if "" != *notAfter {
+		p, err := time.Parse(time.RFC3339, *notAfter)
+		fatalIfErr(err, "unable to parse -not-after")
+		if !p.After(time.Now()) {
+			log.Fatalf("-not-after must be in the future")
+		}
+		notAfterTime = p
+	}
+
 	if "" != *serverCommonName {
 		validateCommonName(*serverCommonName)
 		targetDir := filepath.Join(*caDir, "server")
-		sign(caInfo, *serverCommonName, getServerTemplate(*serverCommonName, &caInfo.caCert.NotAfter), targetDir)
+		if notAfterTime.IsZero() {
+			// if no "-not-after" flag was specifed, we expire the server cert
+			// at the same time as the CA
+			notAfterTime = caInfo.caCert.NotAfter
+		}
+		sign(caInfo, *serverCommonName, getServerTemplate(*serverCommonName, &notAfterTime), targetDir)
 		return
 	}
 
 	if "" != *clientCommonName {
 		validateCommonName(*clientCommonName)
-		var notAfterTime time.Time
-		notAfterTime = time.Now().AddDate(0, 0, 90)
-		if "" != *notAfter {
-			p, err := time.Parse(time.RFC3339, *notAfter)
-			fatalIfErr(err, "unable to parse -not-after")
-			if !p.After(time.Now()) {
-				log.Fatalf("-not-after must be in the future")
-			}
-			notAfterTime = p
+		if notAfterTime.IsZero() {
+			notAfterTime = time.Now().AddDate(0, 0, 90)
 		}
-
 		targetDir := filepath.Join(*caDir, "client")
 		sign(caInfo, *clientCommonName, getClientTemplate(*clientCommonName, &notAfterTime), targetDir)
 		return

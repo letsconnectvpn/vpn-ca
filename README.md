@@ -1,10 +1,10 @@
-Simple CA intended for use with Let's Connect! & eduVPN.
+Simple CA intended for use with OpenVPN.
 
 # Why
 
 We started out using [easy-rsa](https://github.com/OpenVPN/easy-rsa) for Let's 
 Connect! / eduVPN. It is a shell script wrapped around the OpenSSL command 
-line. In theory this can be (very) much cross platform, but in practise it was 
+line. In theory this can be (very) much cross platform, but in practice it was 
 not. Only recent versions fixed some problems on other platforms than Linux.
 
 As part of these fixes they broke backwards compatibility in their 3.x 
@@ -38,23 +38,32 @@ Or manually:
 
 # Usage
 
-Initialize the CA (valid for 5 years):
+Initialize the CA (valid for 5 years) with an RSA key of 3072 bits:
 
     $ _bin/vpn-ca -init
 
-Generate a server certificate (expires at the exact moment the CA expires):
+Generate a server certificate and store it in the `server/` directory, valid 
+until the CA expires:
 
     $ _bin/vpn-ca -server vpn.example.org
 
-Generate a client certificate, valid for 90 days:
+Generate a client certificate and store it in the `client/` directory, valid 
+for 90 days:
 
     $ _bin/vpn-ca -client 12345678
 
-Generate client certifictate and specify when it expires:
+Generate client certificate and specify explicitly when it expires:
 
     $ _bin/vpn-ca -client 12345678 -not-after 2019-08-16T14:00:00+00:00
 
-There is also the `-ca-dir` option you can specify if you do not want to use
-the current directory from which you run the CA command, e.g.
+The `-not-after` flag can also be used with `-server`. 
+
+There is also the `-ca-dir` option you can use if you do not want to use
+the current directory from which you run the CA command to store the CA, server
+and client certificates, e.g.
 
     $ _bin/vpn-ca -ca-dir /tmp -init
+    $ _bin/vpn-ca -ca-dir /tmp -server vpn.example.org
+    $ _bin/vpn-ca -ca-dir /tmp -client 12345678
+
+Once you specify the `-ca-dir` you MUST also use it for subsequent calls.
