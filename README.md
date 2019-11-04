@@ -42,13 +42,11 @@ Initialize the CA (valid for 5 years) with an RSA key of 3072 bits:
 
     $ _bin/vpn-ca -init
 
-Generate a server certificate and store it in the `server/` directory, valid 
-until the CA expires:
+Generate a server certificate, valid until the CA expires:
 
     $ _bin/vpn-ca -server vpn.example.org
 
-Generate a client certificate and store it in the `client/` directory, valid 
-for 90 days:
+Generate a client certificate, valid for 90 days:
 
     $ _bin/vpn-ca -client 12345678
 
