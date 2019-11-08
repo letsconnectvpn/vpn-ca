@@ -174,7 +174,7 @@ func main() {
 		return
 	}
 
-	if "" == *serverCommonName && "" == *clientCommonName {
+	if *serverCommonName == "" && *clientCommonName == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -184,7 +184,7 @@ func main() {
 	// determine whether the user specified an "-not-after" flag and parse it
 	// if they did...
 	var notAfterTime time.Time
-	if "" != *notAfter {
+	if *notAfter != "" {
 		p, err := time.Parse(time.RFC3339, *notAfter)
 		fatalIfErr(err, "unable to parse -not-after")
 		if !p.After(time.Now()) {
@@ -193,7 +193,7 @@ func main() {
 		notAfterTime = p
 	}
 
-	if "" != *serverCommonName {
+	if *serverCommonName != "" {
 		validateCommonName(*serverCommonName)
 		if notAfterTime.IsZero() {
 			// if no "-not-after" flag was specifed, we expire the server cert
@@ -204,7 +204,7 @@ func main() {
 		return
 	}
 
-	if "" != *clientCommonName {
+	if *clientCommonName != "" {
 		validateCommonName(*clientCommonName)
 		if notAfterTime.IsZero() {
 			notAfterTime = time.Now().AddDate(0, 0, 90)
