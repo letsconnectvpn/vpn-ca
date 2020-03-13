@@ -190,6 +190,9 @@ func main() {
 		if !p.After(time.Now()) {
 			log.Fatalf("-not-after must be in the future")
 		}
+		if p.After(caInfo.caCert.NotAfter) {
+			log.Fatalf("-not-after must not outlive CA")
+		}
 		notAfterTime = p
 	}
 
