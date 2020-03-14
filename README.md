@@ -46,18 +46,22 @@ Generate a server certificate, valid for 1 year:
 
     $ _bin/vpn-ca -server vpn.example.org
 
-Generate a client certificate, valid for 90 days:
+Generate a client certificate, valid for 1 year:
 
     $ _bin/vpn-ca -client 12345678
 
 Generate client certificate and specify explicitly when it expires:
 
-    $ _bin/vpn-ca -client 12345678 -not-after 2019-08-16T14:00:00+00:00
+    $ _bin/vpn-ca -client 12345678 -not-after 2020-12-12T12:12:12+00:00
 
 The `-not-after` flag can be used with both `-client` and `-server`.
 
 If you want to expire a certificate at the exact same time as the CA, you can
 use `-not-after CA`.
+
+**NOTE**: if your `-not-after`, or the default of 1 year when not specified, 
+extends beyond the lifetime of the CA an error will be thrown! You should 
+either reduce the certificate lifetime, or generate a new CA.
 
 There is also the `-ca-dir` option you can use if you do not want to use
 the current directory from which you run the CA command to store the CA, server

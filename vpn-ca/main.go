@@ -157,27 +157,28 @@ func sign(caInfo *caInfo, commonName string, tpl *x509.Certificate) *x509.Certif
 	return cert
 }
 
-func parseNotAfter(notAfter *string, caInfo *caInfo) time.Time {
+func parseNotAfter(notAfter *string, caNotAfter time.Time) time.Time {
 	var notAfterTime time.Time
 	if *notAfter == "" {
-		return notAfterTime
+		// by default a generated certificate will expire after 1 year
+		notAfterTime = time.Now().AddDate(1, 0, 0)
+	} else if *notAfter == "CA" {
+		notAfterTime = caNotAfter
+	} else {
+		parsedTime, err := time.Parse(time.RFC3339, *notAfter)
+		fatalIfErr(err, "unable to parse -not-after")
+		if !parsedTime.After(time.Now()) {
+			log.Fatalf("-not-after must be in the future")
+		}
+		notAfterTime = parsedTime
 	}
 
-	if *notAfter == "CA" {
-		return caInfo.caCert.NotAfter
+	// make sure the certificate won't outlive the CA
+	if notAfterTime.After(caNotAfter) {
+		log.Fatalf("-not-after can't outlive the CA")
 	}
 
-	// parse provided time
-	parsedTime, err := time.Parse(time.RFC3339, *notAfter)
-	fatalIfErr(err, "unable to parse -not-after")
-	if !parsedTime.After(time.Now()) {
-		log.Fatalf("-not-after must be in the future")
-	}
-	if parsedTime.After(caInfo.caCert.NotAfter) {
-		log.Fatalf("-not-after must not outlive CA")
-	}
-
-	return parsedTime
+	return notAfterTime
 }
 
 func main() {
@@ -185,7 +186,7 @@ func main() {
 	var caInit = flag.Bool("init", false, "initialize the CA")
 	var serverCommonName = flag.String("server", "", "generate a server certificate with provided CN")
 	var clientCommonName = flag.String("client", "", "generate a client certificate with provided CN")
-	var notAfter = flag.String("not-after", "", "certificate is only valid until specified moment, format: 2019-08-16T14:00:00+00:00 _or_ \"CA\" to expire together with CA")
+	var notAfter = flag.String("not-after", "", "limit certificate validity. Format: \"2019-08-16T14:00:00+00:00\", or \"CA\" to expire at CA expiry")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
@@ -203,24 +204,17 @@ func main() {
 	}
 
 	caInfo := getCa(*caDir)
-	notAfterTime := parseNotAfter(notAfter, caInfo)
 
 	if *serverCommonName != "" {
 		validateCommonName(*serverCommonName)
-		if notAfterTime.IsZero() {
-			// if no "-not-after" flag was specified, expire after 1 year
-			notAfterTime = time.Now().AddDate(1, 0, 0)
-		}
+		notAfterTime := parseNotAfter(notAfter, caInfo.caCert.NotAfter)
 		sign(caInfo, *serverCommonName, getServerTemplate(*serverCommonName, &notAfterTime))
 		return
 	}
 
 	if *clientCommonName != "" {
 		validateCommonName(*clientCommonName)
-		if notAfterTime.IsZero() {
-			// if no "-not-after" flag was specified, expire after 90 days
-			notAfterTime = time.Now().AddDate(0, 0, 90)
-		}
+		notAfterTime := parseNotAfter(notAfter, caInfo.caCert.NotAfter)
 		sign(caInfo, *clientCommonName, getClientTemplate(*clientCommonName, &notAfterTime))
 		return
 	}
