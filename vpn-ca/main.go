@@ -157,12 +157,35 @@ func sign(caInfo *caInfo, commonName string, tpl *x509.Certificate) *x509.Certif
 	return cert
 }
 
+func parseNotAfter(notAfter *string, caInfo *caInfo) time.Time {
+	var notAfterTime time.Time
+	if *notAfter == "" {
+		return notAfterTime
+	}
+
+	if *notAfter == "CA" {
+		return caInfo.caCert.NotAfter
+	}
+
+	// parse provided time
+	parsedTime, err := time.Parse(time.RFC3339, *notAfter)
+	fatalIfErr(err, "unable to parse -not-after")
+	if !parsedTime.After(time.Now()) {
+		log.Fatalf("-not-after must be in the future")
+	}
+	if parsedTime.After(caInfo.caCert.NotAfter) {
+		log.Fatalf("-not-after must not outlive CA")
+	}
+
+	return parsedTime
+}
+
 func main() {
 	var caDir = flag.String("ca-dir", ".", "the CA dir")
 	var caInit = flag.Bool("init", false, "initialize the CA")
 	var serverCommonName = flag.String("server", "", "generate a server certificate with provided CN")
 	var clientCommonName = flag.String("client", "", "generate a client certificate with provided CN")
-	var notAfter = flag.String("not-after", "", "certificate is only valid until specified moment, format: 2019-08-16T14:00:00+00:00")
+	var notAfter = flag.String("not-after", "", "certificate is only valid until specified moment, format: 2019-08-16T14:00:00+00:00 _or_ \"CA\" to expire together with CA")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
@@ -180,28 +203,13 @@ func main() {
 	}
 
 	caInfo := getCa(*caDir)
-
-	// determine whether the user specified an "-not-after" flag and parse it
-	// if they did...
-	var notAfterTime time.Time
-	if *notAfter != "" {
-		p, err := time.Parse(time.RFC3339, *notAfter)
-		fatalIfErr(err, "unable to parse -not-after")
-		if !p.After(time.Now()) {
-			log.Fatalf("-not-after must be in the future")
-		}
-		if p.After(caInfo.caCert.NotAfter) {
-			log.Fatalf("-not-after must not outlive CA")
-		}
-		notAfterTime = p
-	}
+	notAfterTime := parseNotAfter(notAfter, caInfo)
 
 	if *serverCommonName != "" {
 		validateCommonName(*serverCommonName)
 		if notAfterTime.IsZero() {
-			// if no "-not-after" flag was specifed, we expire the server cert
-			// at the same time as the CA
-			notAfterTime = caInfo.caCert.NotAfter
+			// if no "-not-after" flag was specified, expire after 1 year
+			notAfterTime = time.Now().AddDate(1, 0, 0)
 		}
 		sign(caInfo, *serverCommonName, getServerTemplate(*serverCommonName, &notAfterTime))
 		return
@@ -210,6 +218,7 @@ func main() {
 	if *clientCommonName != "" {
 		validateCommonName(*clientCommonName)
 		if notAfterTime.IsZero() {
+			// if no "-not-after" flag was specified, expire after 90 days
 			notAfterTime = time.Now().AddDate(0, 0, 90)
 		}
 		sign(caInfo, *clientCommonName, getClientTemplate(*clientCommonName, &notAfterTime))
