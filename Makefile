@@ -1,6 +1,6 @@
 PREFIX=/usr/local
 
-.PHONY: fmt clean
+.PHONY: fmt clean install
 
 _bin/vpn-ca: vpn-ca/main.go
 	go build -o $@ vpn-ca/main.go
