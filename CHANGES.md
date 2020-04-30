@@ -1,5 +1,8 @@
 # ChangeLog
 
+## 2.0.1 (2020-04-30)
+- update `Makefile` to support `install`
+
 ## 2.0.0 (2020-03-16)
 - make sure issued certificates never outlive the CA (#6)
 - allow specifying `CA` as a value for `-not-after` to explicitly let the 
