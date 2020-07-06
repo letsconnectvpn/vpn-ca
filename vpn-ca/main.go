@@ -2,8 +2,8 @@ package main
 
 import (
 	"crypto"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -77,8 +77,8 @@ func readCert(pemFile string) *x509.Certificate {
 	return cert
 }
 
-func generateKey(filename string) *rsa.PrivateKey {
-	key, err := rsa.GenerateKey(rand.Reader, 3072)
+func generateKey(filename string) ed25519.PrivateKey {
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	fatalIfErr(err, "unable to generate key")
 	der, err := x509.MarshalPKCS8PrivateKey(key)
 	fatalIfErr(err, "unable to convert key to DER")
