@@ -1,3 +1,12 @@
+**Summary**: Simple CA intended for use with OpenVPN
+
+**Description**: Simple CA intended for use with OpenVPN written in Go. It is 
+much simpler to use than easy-rsa and can be run concurrently.
+
+**License**: MIT
+
+# Introduction
+
 Simple CA intended for use with OpenVPN.
 
 # Why
@@ -9,7 +18,11 @@ not. Only recent versions fixed some problems on other platforms than Linux.
 
 As part of these fixes they broke backwards compatibility in their 3.x 
 releases, which made "in place" upgrades impossible without (manually)
-migrating to their new version(s). 
+migrating to their new version(s).
+
+We also noticed problems with high volume VPN servers where sometimes the 
+easy-rsa certificate database got corrupted because two threads where running 
+simultaneously.
 
 This was a good moment to think about ditching easy-rsa and come up with 
 something better. Using PHP's OpenSSL binding was out due to its complexity 
