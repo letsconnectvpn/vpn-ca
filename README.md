@@ -53,7 +53,7 @@ Or manually:
 
 Initialize the CA (valid for 5 years) with an RSA key of 3072 bits:
 
-    $ _bin/vpn-ca -init-ca
+    $ _bin/vpn-ca -init-ca -name "My Root CA"
 
 Generate a server certificate, valid for 1 year:
 
