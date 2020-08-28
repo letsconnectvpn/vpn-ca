@@ -1,12 +1,12 @@
 # ChangeLog
 
 ## 3.0.0 (...)
-- add sAN (DNSNames) to server certificates as well
+- add name to sAN (DNSNames) for server certificates as well
 - make CN of CA configurable through `-name` option when generating a CA
 - change CLI parameters, now an explicit `-name` is required for `-server` and
-  `-client`, optional for `-ca`
+  `-client`, optional for `-init-ca`
 - default CN of CA changed to "Root CA"
-- the `-init` option is gone, renamed to `-ca`
+- the `-init` option is renamed to `-init-ca`
   
 ## 2.0.1 (2020-04-30)
 - update `Makefile` to support `install`
