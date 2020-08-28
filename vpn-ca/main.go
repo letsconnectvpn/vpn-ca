@@ -24,7 +24,7 @@ type caInfo struct {
 	caCert *x509.Certificate
 }
 
-func initCa(caDir string, certName string, notAfter time.Time) {
+func caInit(caDir string, certName string, notAfter time.Time) {
 	caKey := generateKey(filepath.Join(caDir, "ca.key"))
 	makeRootCert(caKey, filepath.Join(caDir, "ca.crt"), certName, notAfter)
 }
@@ -212,7 +212,7 @@ func parseNotAfter(notAfter *string, defaultNotAfter time.Time, caNotAfter time.
 
 func main() {
 	var caDir = flag.String("ca-dir", ".", "CA Directory")
-	var caCert = flag.Bool("ca", false, "Generate CA Certificate/Key")
+	var initCa = flag.Bool("init-ca", false, "Generate CA Certificate/Key")
 	var serverCert = flag.Bool("server", false, "Generate a Server Certificate/Key")
 	var clientCert = flag.Bool("client", false, "Generate a Client Certificate/Key")
 	var certName = flag.String("name", "", "Name on the CA/Server/Client Certificate")
@@ -223,13 +223,13 @@ func main() {
 	}
 	flag.Parse()
 
-	if *caCert {
+	if *initCa {
 		if *certName == "" {
 			*certName = "Root CA"
 		}
 		// CA gets written to ca.key/ca.crt, so no need to validate the
 		// name to prevent issues writing the certificate...
-		initCa(*caDir, *certName, time.Now().AddDate(5, 0, 0))
+		caInit(*caDir, *certName, time.Now().AddDate(5, 0, 0))
 		return
 	}
 
