@@ -53,19 +53,19 @@ Or manually:
 
 Initialize the CA (valid for 5 years) with an RSA key of 3072 bits:
 
-    $ _bin/vpn-ca -init
+    $ _bin/vpn-ca -ca
 
 Generate a server certificate, valid for 1 year:
 
-    $ _bin/vpn-ca -server vpn.example.org
+    $ _bin/vpn-ca -server -name vpn.example.org
 
 Generate a client certificate, valid for 1 year:
 
-    $ _bin/vpn-ca -client 12345678
+    $ _bin/vpn-ca -client -name 12345678
 
 Generate client certificate and specify explicitly when it expires:
 
-    $ _bin/vpn-ca -client 12345678 -not-after 2020-12-12T12:12:12+00:00
+    $ _bin/vpn-ca -client -name 12345678 -not-after 2020-12-12T12:12:12+00:00
 
 The `-not-after` flag can be used with both `-client` and `-server`.
 
@@ -80,8 +80,8 @@ There is also the `-ca-dir` option you can use if you do not want to use
 the current directory from which you run the CA command to store the CA, server
 and client certificates, e.g.
 
-    $ _bin/vpn-ca -ca-dir /tmp -init
-    $ _bin/vpn-ca -ca-dir /tmp -server vpn.example.org
-    $ _bin/vpn-ca -ca-dir /tmp -client 12345678
+    $ _bin/vpn-ca -ca-dir /tmp -ca
+    $ _bin/vpn-ca -ca-dir /tmp -server -name vpn.example.org
+    $ _bin/vpn-ca -ca-dir /tmp -client -name 12345678
 
 Once you specify the `-ca-dir` you MUST also use it for subsequent calls.

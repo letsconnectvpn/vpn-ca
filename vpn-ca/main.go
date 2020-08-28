@@ -24,9 +24,9 @@ type caInfo struct {
 	caCert *x509.Certificate
 }
 
-func initCa(caDir string) {
+func caInit(caDir string, certName string, notAfter time.Time) {
 	caKey := generateKey(filepath.Join(caDir, "ca.key"))
-	makeRootCert(caKey, filepath.Join(caDir, "ca.crt"))
+	makeRootCert(caKey, filepath.Join(caDir, "ca.crt"), certName, notAfter)
 }
 
 func getCa(caDir string) *caInfo {
@@ -87,8 +87,8 @@ func generateKey(filename string) ed25519.PrivateKey {
 	return key
 }
 
-func makeRootCert(key crypto.Signer, filename string) (*x509.Certificate, error) {
-	tpl := getCaTemplate()
+func makeRootCert(key crypto.Signer, filename string, certName string, notAfter time.Time) (*x509.Certificate, error) {
+	tpl := getCaTemplate(certName, notAfter)
 	der, err := x509.CreateCertificate(rand.Reader, tpl, tpl, key.Public(), key)
 	fatalIfErr(err, "unable to generate DER")
 	writePem(filename, der, "CERTIFICATE")
@@ -96,28 +96,58 @@ func makeRootCert(key crypto.Signer, filename string) (*x509.Certificate, error)
 	return x509.ParseCertificate(der)
 }
 
-func validateCommonName(commonName string) {
-	validCommonName := regexp.MustCompile(`^[a-zA-Z0-9-.]+$`)
-	if !validCommonName.MatchString(commonName) {
-		log.Fatalf("invalid 'commonName' specified")
+func validateCertName(certName string) {
+	validCertName := regexp.MustCompile(`^[a-zA-Z0-9-.]+$`)
+	if !validCertName.MatchString(certName) {
+		log.Fatalf("invalid 'certName' specified")
 	}
 }
 
-func getCaTemplate() *x509.Certificate {
-	// 5 years
-	tpl := getTemplate("VPN CA", time.Now().AddDate(5, 0, 0), x509.KeyUsageDigitalSignature|x509.KeyUsageCertSign, []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth})
-	tpl.IsCA = true
-	tpl.MaxPathLenZero = true
-
-	return tpl
+func getCaTemplate(certName string, notAfter time.Time) *x509.Certificate {
+	return &x509.Certificate{
+		Subject: pkix.Name{
+			CommonName: certName,
+		},
+		SerialNumber:          generateSerial(),
+		NotBefore:             time.Now().Add(-5 * time.Minute),
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		MaxPathLenZero:        true,
+	}
 }
 
-func getClientTemplate(commonName string, notAfter *time.Time) *x509.Certificate {
-	return getTemplate(commonName, *notAfter, x509.KeyUsageDigitalSignature, []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth})
+func getClientTemplate(certName string, notAfter time.Time) *x509.Certificate {
+	return &x509.Certificate{
+		Subject: pkix.Name{
+			CommonName: certName,
+		},
+		SerialNumber:          generateSerial(),
+		NotBefore:             time.Now().Add(-5 * time.Minute),
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  false,
+	}
 }
 
-func getServerTemplate(commonName string, notAfter *time.Time) *x509.Certificate {
-	return getTemplate(commonName, *notAfter, x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment, []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth})
+func getServerTemplate(certName string, notAfter time.Time) *x509.Certificate {
+	return &x509.Certificate{
+		Subject: pkix.Name{
+			CommonName: certName,
+		},
+		SerialNumber:          generateSerial(),
+		NotBefore:             time.Now().Add(-5 * time.Minute),
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  false,
+		DNSNames:              []string{certName},
+	}
 }
 
 func generateSerial() *big.Int {
@@ -128,10 +158,10 @@ func generateSerial() *big.Int {
 	return serialNumber
 }
 
-func getTemplate(commonName string, notAfter time.Time, keyUsage x509.KeyUsage, extKeyUsage []x509.ExtKeyUsage) *x509.Certificate {
+func getTemplate(certName string, notAfter time.Time, keyUsage x509.KeyUsage, extKeyUsage []x509.ExtKeyUsage) *x509.Certificate {
 	return &x509.Certificate{
 		Subject: pkix.Name{
-			CommonName: commonName,
+			CommonName: certName,
 		},
 		SerialNumber:          generateSerial(),
 		NotBefore:             time.Now().Add(-5 * time.Minute),
@@ -143,12 +173,12 @@ func getTemplate(commonName string, notAfter time.Time, keyUsage x509.KeyUsage, 
 	}
 }
 
-func sign(caInfo *caInfo, commonName string, tpl *x509.Certificate) *x509.Certificate {
-	certKey := generateKey(filepath.Join(caInfo.caDir, fmt.Sprintf("%s.key", commonName)))
+func sign(caInfo *caInfo, certName string, tpl *x509.Certificate) *x509.Certificate {
+	certKey := generateKey(filepath.Join(caInfo.caDir, fmt.Sprintf("%s.key", certName)))
 	der, err := x509.CreateCertificate(rand.Reader, tpl, caInfo.caCert, certKey.Public(), caInfo.caKey)
 	fatalIfErr(err, "unable to generate DER")
 
-	certFile := filepath.Join(caInfo.caDir, fmt.Sprintf("%s.crt", commonName))
+	certFile := filepath.Join(caInfo.caDir, fmt.Sprintf("%s.crt", certName))
 	writePem(certFile, der, "CERTIFICATE")
 
 	cert, err := x509.ParseCertificate(der)
@@ -157,11 +187,10 @@ func sign(caInfo *caInfo, commonName string, tpl *x509.Certificate) *x509.Certif
 	return cert
 }
 
-func parseNotAfter(notAfter *string, caNotAfter time.Time) time.Time {
+func parseNotAfter(notAfter *string, defaultNotAfter time.Time, caNotAfter time.Time) time.Time {
 	var notAfterTime time.Time
 	if *notAfter == "" {
-		// by default a generated certificate will expire after 1 year
-		notAfterTime = time.Now().AddDate(1, 0, 0)
+		notAfterTime = defaultNotAfter
 	} else if *notAfter == "CA" {
 		notAfterTime = caNotAfter
 	} else {
@@ -182,42 +211,51 @@ func parseNotAfter(notAfter *string, caNotAfter time.Time) time.Time {
 }
 
 func main() {
-	var caDir = flag.String("ca-dir", ".", "the CA dir")
-	var caInit = flag.Bool("init", false, "initialize the CA")
-	var serverCommonName = flag.String("server", "", "generate a server certificate with provided CN")
-	var clientCommonName = flag.String("client", "", "generate a client certificate with provided CN")
-	var notAfter = flag.String("not-after", "", "limit certificate validity. Format: \"2019-08-16T14:00:00+00:00\", or \"CA\" to expire at CA expiry")
+	var caDir = flag.String("ca-dir", ".", "CA Directory")
+	var initCa = flag.Bool("init-ca", false, "Generate CA Certificate/Key")
+	var serverCert = flag.Bool("server", false, "Generate a Server Certificate/Key")
+	var clientCert = flag.Bool("client", false, "Generate a Client Certificate/Key")
+	var certName = flag.String("name", "", "Name on the CA/Server/Client Certificate")
+	var notAfter = flag.String("not-after", "", "Limit Certificate Validity for Server/Client Certificate")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
-	if *caInit {
-		initCa(*caDir)
+	if *initCa {
+		if *certName == "" {
+			*certName = "Root CA"
+		}
+		// CA gets written to ca.key/ca.crt, so no need to validate the
+		// name to prevent issues writing the certificate...
+		caInit(*caDir, *certName, time.Now().AddDate(5, 0, 0))
 		return
 	}
 
-	if *serverCommonName == "" && *clientCommonName == "" {
+	if *certName == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	caInfo := getCa(*caDir)
 
-	if *serverCommonName != "" {
-		validateCommonName(*serverCommonName)
-		notAfterTime := parseNotAfter(notAfter, caInfo.caCert.NotAfter)
-		sign(caInfo, *serverCommonName, getServerTemplate(*serverCommonName, &notAfterTime))
+	if *serverCert {
+		validateCertName(*certName)
+		notAfterTime := parseNotAfter(notAfter, time.Now().AddDate(1, 0, 0), caInfo.caCert.NotAfter)
+		sign(caInfo, *certName, getServerTemplate(*certName, notAfterTime))
 		return
 	}
 
-	if *clientCommonName != "" {
-		validateCommonName(*clientCommonName)
-		notAfterTime := parseNotAfter(notAfter, caInfo.caCert.NotAfter)
-		sign(caInfo, *clientCommonName, getClientTemplate(*clientCommonName, &notAfterTime))
+	if *clientCert {
+		validateCertName(*certName)
+		notAfterTime := parseNotAfter(notAfter, time.Now().AddDate(1, 0, 0), caInfo.caCert.NotAfter)
+		sign(caInfo, *certName, getClientTemplate(*certName, notAfterTime))
 		return
 	}
+
+	flag.Usage()
+	os.Exit(1)
 }
 
 func fatalIfErr(err error, msg string) {
