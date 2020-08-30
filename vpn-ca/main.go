@@ -215,7 +215,7 @@ func main() {
 	if "" == caDir {
 		caDir = "."
 	}
-	var initCa = flag.Bool("init-ca", false, "Generate CA Certificate/Key")
+	var initCa = flag.Bool("init-ca", false, "Initialize CA")
 	var serverCert = flag.Bool("server", false, "Generate a Server Certificate/Key")
 	var clientCert = flag.Bool("client", false, "Generate a Client Certificate/Key")
 	var certName = flag.String("name", "", "Name on the CA/Server/Client Certificate")
