@@ -211,8 +211,11 @@ func parseNotAfter(notAfter *string, defaultNotAfter time.Time, caNotAfter time.
 }
 
 func main() {
-	var caDir = flag.String("ca-dir", ".", "CA Directory")
-	var initCa = flag.Bool("init-ca", false, "Generate CA Certificate/Key")
+	var caDir = os.Getenv("CA_DIR")
+	if "" == caDir {
+		caDir = "."
+	}
+	var initCa = flag.Bool("init-ca", false, "Initialize CA")
 	var serverCert = flag.Bool("server", false, "Generate a Server Certificate/Key")
 	var clientCert = flag.Bool("client", false, "Generate a Client Certificate/Key")
 	var certName = flag.String("name", "", "Name on the CA/Server/Client Certificate")
@@ -229,7 +232,7 @@ func main() {
 		}
 		// CA gets written to ca.key/ca.crt, so no need to validate the
 		// name to prevent issues writing the certificate...
-		caInit(*caDir, *certName, time.Now().AddDate(5, 0, 0))
+		caInit(caDir, *certName, time.Now().AddDate(5, 0, 0))
 		return
 	}
 
@@ -238,7 +241,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	caInfo := getCa(*caDir)
+	caInfo := getCa(caDir)
 
 	if *serverCert {
 		validateCertName(*certName)
