@@ -83,3 +83,20 @@ server and client certificates, e.g.
     $ CA_DIR=/tmp _bin/vpn-ca -init-ca -name "My Root CA"
     $ CA_DIR=/tmp _bin/vpn-ca -server  -name vpn.example.org
     $ CA_DIR=/tmp _bin/vpn-ca -client  -name 12345678
+    
+# Algorithms
+
+By default the RSA algorithm with size 3072 bits is used for keys. You can 
+switch to using ECDSA keys with the P-256 / prime256v1 algorithm by setting the 
+`CA_ALGO` environment variable, for example:
+
+    $ CA_ALGO=ECDSA _bin/vpn-ca -init-ca -name "My NIST Curve CA"
+    $ CA_ALGO=ECDSA _bin/vpn-ca -server -name "www.example.org"
+    
+Make sure you keep setting the `CA_ALGO` otherwise the CA will switch back to
+generating RSA keys. You can of course mix and match, but keeping the algorithm
+consistent makes some sense.
+
+**NOTE**: there is an `ed25519` branch in the repository that supports EdDSA 
+(Ed25519) as well: `CA_ALGO=EdDSA`, but one needs a relatively modern Go 
+version for it, not available through `stretch-backports`.
