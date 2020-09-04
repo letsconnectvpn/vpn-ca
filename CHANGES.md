@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 3.0.1 (...)
+- also support ECDSA (P-256 / prime256v1) keys using `CA_ALGO=ECDSA` 
+  environment variable
+
 ## 3.0.0 (2020-08-31)
 - add name to sAN (DNSNames) for server certificates as well
 - make CN of CA configurable through `-name` option when generating a CA

@@ -2,8 +2,11 @@ package main
 
 import (
 	"crypto"
+	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -77,7 +80,39 @@ func readCert(pemFile string) *x509.Certificate {
 	return cert
 }
 
-func generateKey(filename string) ed25519.PrivateKey {
+func generateKey(filename string) crypto.Signer {
+	var caAlgo = os.Getenv("CA_ALGO")
+	if "ECDSA" == caAlgo {
+		return generateEcDsaKey(filename)
+	}
+	if "EdDSA" == caAlgo {
+		return generateEdDsaKey(filename)
+	}
+
+	return generateRsaKey(filename)
+}
+
+func generateRsaKey(filename string) crypto.Signer {
+	key, err := rsa.GenerateKey(rand.Reader, 3072)
+	fatalIfErr(err, "unable to generate key")
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	fatalIfErr(err, "unable to convert key to DER")
+	writePem(filename, der, "PRIVATE KEY")
+
+	return key
+}
+
+func generateEcDsaKey(filename string) crypto.Signer {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	fatalIfErr(err, "unable to generate key")
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	fatalIfErr(err, "unable to convert key to DER")
+	writePem(filename, der, "PRIVATE KEY")
+
+	return key
+}
+
+func generateEdDsaKey(filename string) crypto.Signer {
 	_, key, err := ed25519.GenerateKey(rand.Reader)
 	fatalIfErr(err, "unable to generate key")
 	der, err := x509.MarshalPKCS8PrivateKey(key)
