@@ -85,7 +85,7 @@ func generateKey(filename string) crypto.Signer {
 	if "ECDSA" == keyAlgo {
 		return generateEcDsaKey(filename)
 	}
-	if "EdDSA" == caAlgo {
+	if "EdDSA" == keyAlgo {
 		return generateEdDsaKey(filename)
 	}
 
