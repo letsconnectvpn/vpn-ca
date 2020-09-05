@@ -1,7 +1,7 @@
 # ChangeLog
 
 ## 3.0.1 (...)
-- also support ECDSA (P-256 / prime256v1) keys using `CA_ALGO=ECDSA` 
+- also support ECDSA (P-256 / prime256v1) keys using `CA_KEY_ALGO=ECDSA` 
   environment variable
 
 ## 3.0.0 (2020-08-31)
