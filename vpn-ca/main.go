@@ -81,11 +81,11 @@ func readCert(pemFile string) *x509.Certificate {
 }
 
 func generateKey(filename string) crypto.Signer {
-	var keyAlgo = os.Getenv("CA_KEY_ALGO")
-	if "ECDSA" == keyAlgo {
+	var keyType = os.Getenv("CA_KEY_TYPE")
+	if "ECDSA" == keyType {
 		return generateEcDsaKey(filename)
 	}
-	if "EdDSA" == keyAlgo {
+	if "EdDSA" == keyType {
 		return generateEdDsaKey(filename)
 	}
 

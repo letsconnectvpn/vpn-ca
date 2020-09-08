@@ -12,10 +12,10 @@
 
 for TYPE in RSA ECDSA EdDSA; do
 	mkdir "${TYPE}"
-	CA_DIR="${TYPE}" CA_KEY_ALGO="${TYPE}" _bin/vpn-ca -init-ca -name "${TYPE} CA"
+	CA_DIR="${TYPE}" CA_KEY_TYPE="${TYPE}" _bin/vpn-ca -init-ca -name "${TYPE} CA"
 	START=$(date +%s)
 	for i in $(seq 50); do
-        	CA_DIR="${TYPE}" CA_KEY_ALGO="${TYPE}" _bin/vpn-ca -client -name "${TYPE}-client-${i}"
+		CA_DIR="${TYPE}" CA_KEY_TYPE="${TYPE}" _bin/vpn-ca -client -name "${TYPE}-client-${i}"
 	done
 	END=$(date +%s)
 	echo "${TYPE} $((END-START))s"

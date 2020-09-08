@@ -86,28 +86,28 @@ server and client certificates, e.g.
     
 # Algorithms
 
-The CA supports these algorithms:
+The CA supports these key types / signature algorithms:
 
     * `RSA` (3072 bits)
     * `ECDSA` (P-256 / prime256v1)
     * `EdDSA` (Ed25519)
     
-You can use the environment variable `CA_KEY_ALGO` to select the type of key
+You can use the environment variable `CA_KEY_TYPE` to select the type of key
 that will be generated. You can use `RSA`, `ECDSA` and `EdDSA` as values to 
-`CA_KEY_ALGO`. `RSA` is the default if you do not specify anything. For example 
+`CA_KEY_TYPE`. `RSA` is the default if you do not specify anything. For example 
 with `ECDSA`:
 
-    $ CA_KEY_ALGO=ECDSA _bin/vpn-ca -init-ca -name "My P-256 CA"
-    $ CA_KEY_ALGO=ECDSA _bin/vpn-ca -server  -name "www.example.org"
+    $ CA_KEY_TYPE=ECDSA _bin/vpn-ca -init-ca -name "My P-256 CA"
+    $ CA_KEY_TYPE=ECDSA _bin/vpn-ca -server  -name "www.example.org"
 
 Or with `EdDSA`:
 
-    $ CA_KEY_ALGO=EdDSA _bin/vpn-ca -init-ca -name "My Ed25519 CA"
-    $ CA_KEY_ALGO=EdDSA _bin/vpn-ca -server  -name "www.example.org"
+    $ CA_KEY_TYPE=EdDSA _bin/vpn-ca -init-ca -name "My Ed25519 CA"
+    $ CA_KEY_TYPE=EdDSA _bin/vpn-ca -server  -name "www.example.org"
 
-If at all possible, use `EdDSA`. It is the most modern, secure and fast 
-algorithm. The problem is that not all software supports `EdDSA`, especially 
-browsers as of today (2020-09-05) do NOT support `EdDSA` certificates, neither
-for servers, nor for clients. All underlying software supports it well, but may
-require up to date libraries, e.g. OpenSSL >= 1.1.1 and perhaps TLSv1.3 as 
-well.
+If at all possible in your situation, use `EdDSA`. It is the most modern, 
+secure and fast algorithm. However, not all software supported `EdDSA` yet. 
+Modern browsers do NOT support `EdDSA` certificates. When using TLS, at least 
+TLSv1.3 is necessary. With OpenSSL, one needs OpenSSL >= 1.1.1.
+
+OpenVPN, for example supports `EdDSA` just fine with TLSv1.3 on modern systems.

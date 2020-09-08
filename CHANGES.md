@@ -1,8 +1,8 @@
 # ChangeLog
 
-## 3.0.1 (...)
-- Support ECDSA (P-256/prime256v1) and EdDSA (Ed25519) keys using 
-  `CA_KEY_ALGO=ECDSA` and `CA_KEY_ALGO=EdDSA` environment variable
+## 3.1.0 (2020-09-08)
+- Support ECDSA (P-256/prime256v1) and EdDSA (Ed25519) keys by setting to 
+  `CA_KEY_TYPE` environment variable to either `ECDSA` or `EdDSA`
 
 ## 3.0.0 (2020-08-31)
 - add name to sAN (DNSNames) for server certificates as well
