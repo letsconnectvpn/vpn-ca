@@ -1,6 +1,6 @@
 # Authors
 
-* François Kooman <fkooman@tuxed.net>
+* François Kooman `<fkooman@tuxed.net>`
 * Marc Dañe
 
 # Based On & Inspiration
